@@ -1,0 +1,159 @@
+---
+title: "Jared Schultz HW2"
+author: "Jared Schultz 4980"
+date: "10/9/2022"
+output: html_document
+---
+GIVEN INFO
+```{r}
+n = 84
+sum.X = 6602
+sum.Y = 597341
+X.bar = 6602/n
+Y.bar = 597341/n
+sum.X2 = 522098
+sum.Y2 = 4796548849
+sum.XY = 46400230
+```
+
+
+
+**A) Based on the scatter plot, comment on the relationship between percentage of high school graduates and crime rate.**
+
+```{r}
+# The scatter plot has a downward trend where the higher percentage of H.S grads the lower the crime rate.
+```
+
+
+**B) Calculate the least-squares estimators:** $\hat{β_1},\hat{β_0}$. **Write down the fitted regression line and interpret** $\hat{β_1},\hat{β_0}$.
+
+$\hat{\beta_1} = \frac{\sum{(X_i - \bar{X})(Y_i-\bar{Y})}}{S_{xx}} = \frac{\sum{X_iY_i} -\bar{X}\sum{Y_i}}{\sum{X^2_i - n\bar{X}^2}}$ $\text{ , }\hat{\beta_0} = \bar{Y} - \bar{X}\hat{\beta_1}$
+```{r}
+# From the above we know we can calculate them like :
+
+S_xx = sum.X2 - n*(X.bar)^2
+top = sum.XY - X.bar*sum.Y
+
+b1 = top/S_xx
+# Here b1 can interpreted as per unit change in percentage of H.S grads the number of crimes/100,000 lowers by 170. 
+b1
+# Here b0 can not be interpreted to something useful since it doesn't make sense for a school to have a 0% graduation rate. Our lowest value in the data set seems to be about 60%.
+b0 = Y.bar - X.bar*b1
+b0
+# We found b1 and b0 above. Below we will give the fitted regression line
+```
+$\hat{Y_i} = 20517.60 - 170.58X_i$
+
+
+**C) Calculate error sum of squares (SSE) and mean squared error (MSE). What is the degrees of freedom of SSE?**
+
+
+$SSE = \sum{(Y_i - \hat{Y_i})^2} = \sum{(Y^2_i - 2Y_i\hat{Y_i} +\hat{Y}^2_i)} = \sum{Y^2_i} -2(\beta_o\sum{Y_i} +\beta_1\sum{X_iY_i}) + n\beta^2_0 + 2\beta_0\beta_1\sum{X_i} + \beta^2_1\sum{X^2_i}$
+
+```{r}
+# The Degrees of freedom for SSE is n-2
+
+SSE = sum.Y2 -2*(b0*sum.Y+b1*sum.XY) + n*b0^2 + 2*b0*b1*sum.X +(b1^2)*sum.X2
+SSE
+MSE = SSE/(n-2)
+MSE
+```
+
+*D**) Calculate the standard errors for the LS estimators**
+
+$s(\beta_o) = \sqrt{MSE(\frac{1}{n}+\frac{\bar{X}^2}{S_{xx}})}$ $\text{ , } s(\beta_1) = \sqrt{\frac{MSE}{S_{xx}}}$
+
+```{r}
+se.b0 = sqrt(MSE*(1/n + X.bar^2/S_xx))
+se.b0
+se.b1 = sqrt(MSE/S_xx)
+se.b1
+```
+
+**E) Test whether or not there is a linear association between crime rate and percentage**
+**of high school graduates at significance level 0.01. State the null and alternative hypotheses, the test statistic, its null distribution, the decision rule and the conclusion**
+
+```{r}
+# calculate Test statistic, critical point and p-value.
+t = b1/se.b1
+t
+# How to calculate the critical point for t dist 2 tail: qt(alpha, df, lower.tail=TRUE)
+crit = c(qt(.005,82),qt(.995,82))
+crit
+# How to calculate p-value associated with the given t-score for t dist :pt(t-score, df, lower.tail = TRUE)
+p.value = pt(t,82)
+p.value
+```
+
+
+
+$\text{Since this is a test of linear relation we will test if beta is 0 or not since if beta is 0 then there is no linear relationship.}$
+
+$H_0 : \beta_1 = 0 \text{ , } \beta_1 \ne 0$
+
+$T^* = \frac{\hat{\beta_1 -0}}{s(\hat{\beta_1})} = -4.102$
+
+$\text{Given we have |-4.102| > 2.64 we will choose to reject the bull hupothesis at alpha =0.01.}$
+
+$\text{We can also see the p.value from above is les than alpha so we can draw the same conclusion.}$
+
+$\text{Conclusion: there is significant evidence to say that there is a linear association between our given variables}$
+
+**F) What is an unbiased estimator for** $\beta_0$? **Construct a 99% confidence interval for** $\beta_0$. **Interpret your confidence interval.**
+
+$\text{An unbiased estimator for beta 0 is } E(\beta_0) = \hat{\beta_0}$
+
+$CI = \hat{\beta_0} \pm t(1-\alpha/2;n-2)*s(\hat{\beta_0})$
+
+```{r}
+# The interpretation of this is CI is that we estimate beta 0 to fall within
+# the interval below with 99% certainty.
+CI.b0 = c(b0 - qt(.995,82)*se.b0, b0 + qt(.995,82)*se.b0)
+paste0("CI of beta 0 = (",round(CI.b0[1],2),", " ,round(CI.b0[2],2),")")
+
+```
+**Construct a 95% confidence interval for the mean crime rate for counties with percentage of high school graduates being 85. Interpret your confidence interval.**
+
+$\text{We are dealing with a mean response so we will use the following :}$
+
+$\hat{Y}_h = \hat{\beta}_0+\hat{\beta}_1X_h$
+
+$s(\hat{Y}_h) = \sqrt{MSE(\frac{1}{n}+\frac{(X_h-\bar{X})^2}{S_{xx}})}$
+
+$CI = \hat{Y}_h \pm t(1-\alpha/2;n-2)*s(\hat{Y}_h)$
+
+```{r}
+a = .05
+X.h = 85
+Y.h = b0 +b1*X.h
+se.Y.h = sqrt(MSE*(1/n + (X.h-X.bar)^2/S_xx))
+CI.Y.h = c(Y.h+qt(a/2,82)*se.Y.h,Y.h +qt(1-a/2,82)*se.Y.h)
+
+# The interpretation of our confidence interval is that we are 95 percent confident that a high school with an 85% graduation rate will have between 5282 to  6755 crimes per a population of 100,000 people.
+paste0("CI of Y.h(85) = (",round(CI.Y.h[1],0),", " ,round(CI.Y.h[2],0),")")
+
+```
+
+**(h) County A has a high-school graduates percentage being 85. What is the predicted crime rate of county A? Construct a 95% prediction interval for the crime rate.****Compare this interval with the one from part (g), what do you observe?**
+
+$\text{We are dealing with a prediction interval so we will use the following :}$
+
+$\hat{Y}_{h(new)} = \hat{\beta}_0+\hat{\beta}_1X_h + \epsilon_h$
+
+$Pred_h = \hat{Y}_h - \hat{Y}_{h(new)}$
+
+$s(Pred_h) = \sqrt{MSE(1+\frac{1}{n}+\frac{(X_h-\bar{X})^2}{S_{xx}})}$
+
+$CI = \hat{Y}_h \pm t(1-\alpha/2;n-2)*s(Pred_h)$
+
+```{r}
+a = .05
+X.h = 85
+Y.h = b0 +b1*X.h
+se.pred.h = sqrt(MSE*(1+1/n + (X.h-X.bar)^2/S_xx))
+CI.Y.h.new = c(Y.h+qt(a/2,82)*se.pred.h,Y.h +qt(1-a/2,82)*se.pred.h)
+
+# From this prediction interval we can notice that our bounds here are much larger than our confidence interval. To make predictions for observations outside of data set our information bcomes less accurate.
+paste0("CI of Y.h(85) = (",round(CI.Y.h.new[1],0),", " ,round(CI.Y.h.new[2],0),")")
+
+```
