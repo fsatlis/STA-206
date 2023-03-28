@@ -1,0 +1,141 @@
+---
+title: "206 cheet sheet comp"
+author: "Jared Schultz 4980"
+date: "2023-03-25"
+output: html_document
+---
+use `attach(data)`
+
+For adding a simple regression line to a scatter plot:
+
+`plot(x,y)`
+`abline(beta0,beta1, col = "red", lwd = 2.5)`
+
+note: `par(mfrow = c())`
+
+For confidence intervals around beta
+
+`confint(fit,parm = c("X1","X2","X4"),level=.95)`
+
+For prediction / confidence intervals **around a point** in the regression use:
+
+`predict(fit,interval = "prediction/confidence",newdata = data.frame(x = n1,x2 = n2,..))`
+
+library(GGally) for ggpairs
+library(MASS) for boxcox
+library(Matrix) for rankMatrix
+
+res vs predictor plots `plot(X1,res)` look for linear pattern to add into model
+
+Two way interaction plots `plot(X1*X2,res)` look for linear pattern to add into model
+
+**Testing if single variables can be dropped**
+Create full model lm call it full then look at summary(full)
+
+1. Look at significant levels in summary and F* = $t^2$ and p-values same:
+
+IF we are **testing multiple can be removed at once**
+
+1. Create full model lm call it full. create reduced model lm call it red.
+2. Call anova(full) and anova(red) to get df and SSE for full and reduced then calculate F-val.
+3. Calculate p.val = `pf(F.val,df_R-df_F, df_F,lower.tail = F)`
+
+$\text{Now lets test if beta1 can be dropped at type one error level of 5%}$
+
+$H_0 : \beta_1 = 0\text{ , }H_\alpha : \beta_1 \ne 0$
+
+$\text{Full model: } Y_i = \beta_0 +\beta_{i1}X_1 +\beta_{i2}X_2+\beta_{i3}X_3+\beta_{i4}X_4$
+
+$\text{Reduced model: } Y_i = \beta_0 +\beta_{i2}X_2+\beta_{i3}X_3+\beta_{i4}X_4$
+
+$F^* = \frac{SSE(R)-SSE(F)/(df_R-df_F)}{SSE(F)/df_F} = (F-val)$
+
+$\text{Under our null claim we have that our test statisic follows :} F^* \sim F_{df_R-df_F,df_F}$
+
+$\text{Calculating our p-value we get (p-val) < .05, thus we will choose to reject the bull hypothesis at alpha =0.05.}$
+
+$\text{Conclusion: We will not remove X1 from our model as it is significant.}$
+
+
+HW6 deals with Coefficent of partial determination and correlation, added variable plots using anova for partial SSE/ SSR. Standardization and VIF
+library(car) for `vif()`
+
+If need to calculate by hand  VIF then here example: 
+
+poly = lm(Y~X1*X2 + I(X1^2)+I(X2^2),data)
+
+X = data.frame(one = rep(1,100),X1,X2,X1*X2,X1^2,X2^2)
+
+X = data.frame((1/sqrt(nrow(X)-1))*scale(X))
+
+X= as.matrix(X)
+
+XtX = t(X)%*%X
+
+rxx = XtX[2:6,2:6]
+
+inv.rxx = solve(rxx)
+
+inv.rxx #look at daigonal.
+
+compare to vif(poly)
+
+
+**HW 7 info**
+
+For replacing or finding NA'a
+
+1. Conduct visual inspection 
+2. use code: `where = which(data$X1=='?')` then data$X1[where] = NA 
+
+Look at hw for nice pie chart info
+
+For finding regression equation of categorical type:
+
+1. set the reference class to the variable that we want `Data$cat = relevel(Data$cat, ref="4")` 
+2. Then the equation is the model with all other class at 0 after fitting model and using summary(model)
+
+comparing models using `anova()`:
+
+Comparing two models with `anova(fit1,fit2)` can tell us if there is an improvement based on the complexity level. 
+
+Step-Wise Regression library(MASS) using `stepAIC()`:
+
+none = lm(Y~1,data)
+
+full = lm(Y~.,data)
+
+stepAIC(none,scope = list(upper=full ,lower = ~1),direction = "both",k=2,trace = F)
+
+note that if there are issues with NA's use `na.omit()` to get rid of all rows with NA. 
+
+The model that follows an nonadditive multiple regression model follows 
+
+$Y_i = \beta_0 +\beta_1X_{i1} +\beta_2X_{i2} + \beta_3(X_{i1}*X_{i2}) +\epsilon_i$ where $\epsilon_i \sim^{iid} N(0,\sigma^2)$
+
+
+The model has the following assumptions: 
+
+**Linearity** of the regression relation: We can see this by looking at our fitted vs residuals and we find **FILL IN**
+
+**Normality** of the errors: We can see this by looking at the QQ-plot and we find that our errors are **FILL IN** normally distributed
+
+**Constant Variance** of the error terms: We can see this by looking at the spread of the data in the fitted vs residual plot and we find that there is **FILL IN**
+
+**Outliers** looking at the Scale vs location plot we can see if there are any points within cooks distance that might suggest we have influential points. From the plot we can see **FILL IN**
+
+
+Test train data sets:
+sample = sample(1:n,split)
+
+train = data[-sample,]
+test = data[sample,]
+
+Fitting a polynomial model of degree 2:
+
+lm(Y ~ X*Z + I(Z^2)+I(X^2),data)
+
+
+
+
+
